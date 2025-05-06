@@ -1,0 +1,8 @@
+---
+- name: Deploy script
+  hosts: vm
+  become: yes
+  roles:
+    - install-docker
+    - start-container
+    - { role: check-script, wait_delay: 20 }

@@ -1,0 +1,60 @@
+---
+- name: Copy Dockerfile and scripts to remote machine
+  ansible.builtin.copy:
+    src: "{{ path_template }}/"
+    dest: /tmp/py
+    mode: preserve
+
+- name: Rename Dockerfile.j2 to Dockerfile
+  ansible.builtin.copy:
+    src: /tmp/py/Dockerfile.j2
+    dest: /tmp/py/Dockerfile
+    remote_src: yes
+    mode: '0644'
+  register: dockerfile_rename
+
+- name: Remove original Dockerfile after renaming
+  ansible.builtin.file:
+    path: /tmp/py/Dockerfile.j2
+    state: absent
+  when: dockerfile_rename.changed
+
+- name: Rename http_requests.py.j2 to http_requests.py
+  ansible.builtin.copy:
+    src: /tmp/py/scripts/http_requests.py.j2
+    dest: /tmp/py/scripts/http_requests.py
+    remote_src: yes
+    mode: '0755'
+  register: http_requests_rename
+
+- name: Remove original script after renaming
+  ansible.builtin.file:
+    path: /tmp/py/scripts/http_requests.py.j2
+    state: absent
+  when: http_requests_rename.changed
+
+- name: Build Docker image
+  ansible.builtin.docker_image:
+    name: "{{ image_name }}"
+    build:
+      path: /tmp/py
+      pull: yes
+      nocache: yes
+      rm: yes
+    source: build
+    state: present
+
+- name: Check if container exists
+  ansible.builtin.docker_container_info:
+    name: "{{ container_name }}"
+  register: container_info
+  ignore_errors: yes
+
+- name: Start container
+  ansible.builtin.docker_container:
+    name: "{{ container_name }}"
+    image: "{{ image_name }}"
+    state: started
+    recreate: no
+    restart_policy: no
+  when: not container_info.exists or container_info.container.State.Status == 'exited'

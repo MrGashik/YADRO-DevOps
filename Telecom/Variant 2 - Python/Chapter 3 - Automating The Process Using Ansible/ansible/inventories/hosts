@@ -1,0 +1,2 @@
+[vm]
+vm1 ansible_ssh_host=192.168.169.133 ansible_ssh_user=mrgashik ansible_python_interpreter=/usr/bin/python3.13

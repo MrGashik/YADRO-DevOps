@@ -1,0 +1,4 @@
+---
+path_template: "roles/start-container/templates"
+image_name: app-sh-image:0.0.1
+container_name: app-sh

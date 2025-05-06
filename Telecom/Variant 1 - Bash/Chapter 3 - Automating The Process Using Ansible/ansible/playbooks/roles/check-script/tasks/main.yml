@@ -1,0 +1,35 @@
+---
+- name: Pause to allow container to start
+  ansible.builtin.pause:
+    seconds: "{{ wait_delay }}"
+  when: check_script | default(false)
+
+- name: Check if container exists
+  ansible.builtin.docker_container_info:
+    name: "{{ container_name }}"
+  register: container_info
+  ignore_errors: yes
+
+- name: Fetch container logs
+  ansible.builtin.command:
+    cmd: docker logs {{ container_name }}
+  register: container_logs
+  when:
+    - check_script | default(false)
+    - container_info.exists
+
+- name: Check work script logs *stdout* (1/2)
+  ansible.builtin.debug:
+    msg: "{{ container_logs.stdout_lines }}"
+  when:
+    - check_script | default(false)
+    - container_info.exists
+    - container_logs.rc == 0
+
+- name: Check work script logs *stderr* (2/2)
+  ansible.builtin.debug:
+    msg: "{{ container_logs.stderr_lines }}"
+  when:
+    - check_script | default(false)
+    - container_info.exists
+    - container_logs.rc == 0

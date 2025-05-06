@@ -28,11 +28,6 @@ send_request() {
   response=$(curl -s -w "%{http_code}" "$url" -o /tmp/response_body 2>/dev/null --connect-timeout 3 --max-time 5)
   local curl_status=$?
 
-  if [ $curl_status -eq 28 ]; then
-      logger "ERROR" "Failed to reach $url: Read time out. (read timeout=5)"
-      return 1
-  fi
-
   if [ $curl_status -ne 0 ]; then
       logger "ERROR" "Failed to reach $url: curl error"
       return 1
